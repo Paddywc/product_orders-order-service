@@ -16,7 +16,47 @@ other services.
 The order service consumes events from other services to create and update orders. It also has API methods to retrieve
 order history which is used by the ui layer.
 
-![order-events.png](readmeimg/order-events.png)
+```mermaid
+sequenceDiagram
+    participant Kafka
+    participant OrderService as Order Service
+    participant OrderDB as Order DB
+    participant KafkaOut as Kafka
+
+    Note over Kafka,OrderDB: Inventory events consumed by Order Service
+
+    Kafka->>OrderService: InventoryReservedEvent
+    OrderService->>OrderDB: Mark order inventory reserved
+    alt Order now fully confirmed
+        OrderService->>KafkaOut: Publish OrderConfirmedEvent
+    end
+
+    Kafka->>OrderService: InventoryReservationFailedEvent
+    OrderService->>OrderDB: Mark inventory reservation failed and cancel order
+    OrderService->>KafkaOut: Publish OrderCancelledEvent
+
+    Kafka->>OrderService: InventoryReleasedEvent
+    OrderService->>OrderDB: Mark inventory released
+
+    Note over Kafka,OrderDB: Payment events consumed by Order Service
+
+    Kafka->>OrderService: PaymentCompletedEvent
+    OrderService->>OrderDB: Mark payment complete
+    alt Order now fully confirmed
+        OrderService->>KafkaOut: Publish OrderConfirmedEvent
+    else Order already cancelled
+        OrderService->>KafkaOut: Publish InvalidPaymentMadeEvent
+    end
+
+    Kafka->>OrderService: PaymentFailedEvent
+    OrderService->>OrderDB: Mark payment failed and cancel order
+    OrderService->>KafkaOut: Publish OrderCancelledEvent
+
+    Kafka->>OrderService: PaymentRefundedEvent
+    OrderService->>OrderDB: Mark payment refunded
+
+    Note over OrderService: Duplicate consumed events are ignored (idempotent handling)
+```
 
 ## Tech Stack
 
