@@ -7,6 +7,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.util.UUID;
 
 public record CreateOrderItemRequest(@NotNull UUID productId,
+                                     @NotNull String productName,
                                      @Positive int quantity,
                                      @PositiveOrZero long unitPriceCents) {
 

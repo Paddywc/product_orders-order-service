@@ -5,6 +5,9 @@ import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
+/**
+ * Amount of money in a given currency
+ */
 @Embeddable
 public class Money {
 
@@ -42,6 +45,14 @@ public class Money {
                 this.amountCents + other.amountCents,
                 this.currency
         );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Money other){
+            return this.amountCents == other.amountCents && this.currency.equals(other.currency);
+        }
+        return super.equals(obj);
     }
 
     public long getAmountCents() {

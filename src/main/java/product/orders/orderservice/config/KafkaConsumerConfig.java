@@ -13,6 +13,7 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
@@ -31,19 +32,18 @@ public class KafkaConsumerConfig {
 
     @Bean
     ConsumerFactory<String, Object> consumerFactory() {
-        Map<String, Object> config = new HashMap<>();
+        Map<String, Object> config = kafkaProperties.buildConsumerProperties();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JacksonJsonDeserializer.class);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, kafkaProperties.getConsumer().getGroupId());
+        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, StringDeserializer.class);
+        config.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
         // IMPORTANT: don't hard-code this; allow tests to override it (e.g., "latest")
         if (kafkaProperties.getConsumer().getAutoOffsetReset() != null) {
             config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, kafkaProperties.getConsumer().getAutoOffsetReset());
         }
 
-        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "product.orders.ordersservice.messaging.event");
 
         return new DefaultKafkaConsumerFactory<>(config);
     }

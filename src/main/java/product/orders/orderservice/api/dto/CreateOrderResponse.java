@@ -5,6 +5,8 @@ import java.util.UUID;
 public record CreateOrderResponse(
         UUID orderId,
         UUID customerId,
+        String customerEmail,
+        String customerAddress,
 
         long totalAmountCents,
         String currency
@@ -15,7 +17,9 @@ public record CreateOrderResponse(
         return "CreateOrderResponse{" +
                 "orderId=" + orderId +
                 ", customerId=" + customerId +
-                ", totalAmountCents=" + totalAmountCents +
+                ", customerEmail='" + customerEmail + '\'' +
+                ", customerAddress='" + customerAddress + '\'' +
+                ", totalAmountUSDCents=" + totalAmountCents +
                 ", currency='" + currency + '\'' +
                 '}';
     }

@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.kafka.autoconfigure.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,20 +19,18 @@ import org.springframework.orm.jpa.JpaTransactionManager;
 import java.util.HashMap;
 import java.util.Map;
 
-// Don't create new topics when unit testing, as this starts a kafka listener
-@Profile("!unittest")
 @Configuration
 public class KafkaProducerConfig {
 
     /**
      * The number of partitions for Kafka topics
      */
-    private static final int N_PARTITIONS = 3;
+    private static final int N_PARTITIONS = 7;
 
     /**
      * The number of replicas for Kafka topics
      */
-    private static final int N_REPLICAS = 1;
+    private static final int N_REPLICAS = 5;
 
     /**
      * Configured Kafka properties via application.properties or the YAML
@@ -54,7 +51,7 @@ public class KafkaProducerConfig {
 
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
-        Map<String, Object> config = new HashMap<>();
+        Map<String, Object> config = kafkaProperties.buildProducerProperties();
 
         config.put(
                 ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -63,9 +60,10 @@ public class KafkaProducerConfig {
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.ACKS_CONFIG, "all");
         config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
-        config.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG,  kafkaProperties.getProducer().getTransactionIdPrefix());
+        config.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, kafkaProperties.getProducer().getTransactionIdPrefix());
+        config.put(JacksonJsonSerializer.ADD_TYPE_INFO_HEADERS, false);
 
-        return new DefaultKafkaProducerFactory<>(config,  new StringSerializer(), new JacksonJsonSerializer<>());
+        return new DefaultKafkaProducerFactory<>(config, new StringSerializer(), new JacksonJsonSerializer<>());
     }
 
     @Bean
@@ -87,7 +85,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory){
+    JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 }

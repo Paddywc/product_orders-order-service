@@ -1,10 +1,11 @@
 package product.orders.orderservice.domain.model;
 
+/**
+ * Status of an {@link Order}
+ */
 public enum OrderStatus {
 
     CREATED,
-    INVENTORY_RESERVED,
-    PAYMENT_AUTHORIZED,
     CONFIRMED,
     CANCELLED
 

@@ -3,14 +3,14 @@ package product.orders.orderservice.api;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import product.orders.orderservice.api.dto.CreateOrderRequest;
 import product.orders.orderservice.api.dto.CreateOrderResponse;
+import product.orders.orderservice.api.dto.GetOrderResponse;
 import product.orders.orderservice.application.OrderApplicationService;
+import product.orders.orderservice.domain.model.CustomerDetails;
 import product.orders.orderservice.domain.model.Money;
+import product.orders.orderservice.domain.model.Order;
 import product.orders.orderservice.domain.model.OrderItem;
 
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/orders")
 public class OrderController {
 
-    private OrderApplicationService orderApplicationService;
+    private final OrderApplicationService orderApplicationService;
 
     public OrderController(OrderApplicationService orderApplicationService) {
         this.orderApplicationService = orderApplicationService;
@@ -33,6 +33,7 @@ public class OrderController {
                 request.items().stream()
                         .map(i -> new OrderItem(
                                 i.productId(),
+                                i.productName(),
                                 i.quantity(),
                                 new Money(
                                         i.unitPriceCents(),
@@ -47,7 +48,7 @@ public class OrderController {
         );
 
         UUID orderId = orderApplicationService.createOrder(
-                request.customerId(),
+                new CustomerDetails(request.customerId(), request.customerEmail(), request.customerAddress()),
                 items,
                 totalAmount
         );
@@ -57,8 +58,24 @@ public class OrderController {
                 .body(new CreateOrderResponse(
                         orderId,
                         request.customerId(),
+                        request.customerEmail(),
+                        request.customerAddress(),
                         request.totalAmountCents(),
                         request.currency()
                 ));
+    }
+
+    @GetMapping("/{orderId}")
+    public GetOrderResponse getOrder(@PathVariable UUID orderId) {
+        Order order = orderApplicationService.getOrder(orderId);
+        return GetOrderResponse.from(order);
+    }
+
+    @GetMapping("/customer/{customerId}")
+    public List<GetOrderResponse> getCustomerOrders(@PathVariable UUID customerId) {
+        List<Order> orders = orderApplicationService.getCustomerOrders(customerId);
+        return orders.stream()
+                .map(GetOrderResponse::from)
+                .collect(Collectors.toList());
     }
 }

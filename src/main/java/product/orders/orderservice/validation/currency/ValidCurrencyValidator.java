@@ -7,6 +7,9 @@ import java.util.Currency;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Validator for {@link ValidCurrency} annotation.
+ */
 public class ValidCurrencyValidator implements ConstraintValidator<ValidCurrency, String> {
 
 
